@@ -1,16 +1,11 @@
 package com.example.skillearn.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,8 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -36,6 +29,8 @@ import com.example.skillearn.ui.screens.home.HomeScreenViewModel
 import com.example.skillearn.ui.screens.home.QuickLogDialog
 import com.example.skillearn.ui.screens.skilldetail.SkillDetailScreenUI
 import com.example.skillearn.ui.screens.skilldetail.SkillDetailViewModel
+import com.example.skillearn.ui.screens.timer.TimerScreenUI
+import com.example.skillearn.ui.screens.timer.TimerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -44,7 +39,7 @@ import kotlinx.coroutines.launch
 fun NavApp() {
     val homeScreenViewModel: HomeScreenViewModel = hiltViewModel()
     val skillDetailViewModel: SkillDetailViewModel = hiltViewModel()
-    val nacController = rememberNavController()
+    val navController = rememberNavController()
     var showQuickLogDialog by remember { mutableStateOf(false) }
     var showFloatingActionBtn by remember { mutableStateOf(false) }
     var showTopAppBar by remember { mutableStateOf(false) }
@@ -92,12 +87,12 @@ fun NavApp() {
             }
         }) { innerPadding ->
         NavHost(
-            navController = nacController,
+            navController = navController,
             startDestination = HomeScreen,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable<HomeScreen> {
-                HomeScreenUI(viewModel = homeScreenViewModel, navController = nacController)
+                HomeScreenUI(viewModel = homeScreenViewModel, navController = navController)
                 showFloatingActionBtn = true
                 showTopAppBar = true
             }
@@ -106,7 +101,7 @@ fun NavApp() {
                 SkillDetailScreenUI(
                     id = id,
                     viewModel = skillDetailViewModel,
-                    navController = nacController,
+                    navController = navController,
                     onEditClick = { skill ->
                         homeScreenViewModel.storeId(skill.id)
                         homeScreenViewModel.onNameChange(skill.name)
@@ -125,6 +120,14 @@ fun NavApp() {
                     })
                 showFloatingActionBtn = false
                 showTopAppBar = false
+            }
+            composable<TimerScreen> {
+                val timerViewModel: TimerViewModel = hiltViewModel()
+                val skillId = it.arguments?.getString("skillId") ?: ""
+                val data = it.toRoute<TimerScreen>()
+                TimerScreenUI(name = data.name,skillId=skillId, onBackPress = {
+                    navController.popBackStack()
+                }, timerViewModel = timerViewModel)
             }
         }
     }

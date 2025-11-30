@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.skillearn.data.local.table.Skill
+import com.example.skillearn.ui.navigation.TimerScreen
 import com.example.skillearn.ui.screens.home.HomeEvent
 import com.example.skillearn.ui.screens.home.HomeScreenViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -76,6 +78,13 @@ fun SkillDetailScreenUI(id: Int,viewModel: SkillDetailViewModel,navController: N
                     onDeleteClick = { onDeleteClick(state.skill) })
                 Spacer(modifier = Modifier.height(16.dp))
                 TrackSection(skill = state.skill)
+                TimerSection(onTimerClick = {
+                    val route = TimerScreen(
+                        skillId = state.skill.id.toString(),
+                        name = state.skill.name
+                    )
+                    navController.navigate(route)
+                }, onQuickClick = {})
             }
         }
         is DetailUiState.Empty -> {}
@@ -108,12 +117,18 @@ fun HeaderSection(onClick:() -> Unit,onEditClick: () -> Unit,onDeleteClick: () -
 
 @Composable
 fun TrackSection(skill: Skill) {
-    val progress = if (skill.goalMinutes > 0) {
-        (skill.millisPracticed.toFloat() / (skill.goalMinutes * 3600000f)).coerceIn(0f, 1f)
+    val goalHours = skill.goalMinutes.toFloat() // Let's be clear about the unit
+
+    val practicedHours = skill.millisPracticed / 3600000f // Convert practiced millis to hours
+
+    val progress = if (goalHours > 0) {
+        (practicedHours / goalHours).coerceIn(0f,1f)
     } else {
         0f
     }
+
     val numberFormatter = NumberFormat.getNumberInstance(Locale.US)
+    numberFormatter.maximumFractionDigits = 2
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
         Text(skill.name, fontSize = 25.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(18.dp))
@@ -131,7 +146,7 @@ fun TrackSection(skill: Skill) {
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp))
             )
-            Text("${skill.millisPracticed}%", color = Color(0xFF7C3AED))
+            Text("${(progress * 100).toInt()}%", color = Color(0xFF7C3AED))
             Spacer(modifier = Modifier.weight(1f))
             Text(text = buildAnnotatedString {
                 withStyle(
@@ -141,7 +156,7 @@ fun TrackSection(skill: Skill) {
                         fontWeight = FontWeight.Bold
                     )
                 ) {
-                    append(numberFormatter.format(skill.millisPracticed))
+                    append(numberFormatter.format(practicedHours))
                 }
                 withStyle(
                     style = SpanStyle(
@@ -149,9 +164,28 @@ fun TrackSection(skill: Skill) {
                         fontSize = 14.sp
                     )
                 ) {
-                    append(" / ${numberFormatter.format(skill.goalMinutes)}")
+                    append(" / ${numberFormatter.format(goalHours)}")
                 }
             })
+        }
+    }
+}
+
+@Composable
+fun TimerSection(onTimerClick: () -> Unit,onQuickClick: () -> Unit) {
+    Row() {
+        Button(onClick = onTimerClick,shape = RoundedCornerShape(12.dp),colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF7C3AED),
+            contentColor = Color.White
+        ) ) {
+            Text("Start Timer")
+        }
+        Spacer(modifier = Modifier.width(5.dp))
+        OutlinedButton(onClick = onQuickClick,shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(contentColor = Color(
+            0xFF009688
+        ), containerColor = Color.Black
+        )) {
+            Text("Quick Log")
         }
     }
 }

@@ -114,13 +114,18 @@ fun SkillCart(skill: Skill,onClick: () -> Unit) {
             containerColor = Color(0xFF222222
         ))
     ) {
-        val progress = if (skill.goalMinutes > 0) {
-            (skill.millisPracticed.toFloat() / (skill.goalMinutes * 3600000f)).coerceIn(0f, 1f)
+        val goalHours = skill.goalMinutes.toFloat() // Let's be clear about the unit
+
+        val practicedHours = skill.millisPracticed / 3600000f // Convert practiced millis to hours
+
+        val progress = if (goalHours > 0) {
+            (practicedHours / goalHours).coerceIn(0f,1f)
         } else {
             0f
         }
 
         val numberFormatter = NumberFormat.getNumberInstance(Locale.US)
+        numberFormatter.maximumFractionDigits = 2
         Column(modifier = Modifier.padding(15.dp)) {
             Row(modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -133,7 +138,7 @@ fun SkillCart(skill: Skill,onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Icon(imageVector = Icons.Outlined.AccessTime, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
-                Text("${numberFormatter.format(skill.millisPracticed)} / ${numberFormatter.format(skill.goalMinutes)} hours",color = MaterialTheme.colorScheme.onBackground,fontSize = 14.sp,)
+                Text("${numberFormatter.format(practicedHours)} / ${numberFormatter.format(goalHours)} hours",color = MaterialTheme.colorScheme.onBackground,fontSize = 14.sp,)
             }
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -142,7 +147,7 @@ fun SkillCart(skill: Skill,onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Progress",color = MaterialTheme.colorScheme.onBackground,fontSize = 14.sp,)
-                Text("${skill.millisPracticed}%",color = MaterialTheme.colorScheme.onBackground,fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text("${(progress * 100).toInt()}%",color = MaterialTheme.colorScheme.onBackground,fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             LinearProgressIndicator(
                 progress = { progress },

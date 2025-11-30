@@ -12,3 +12,6 @@ object HomeScreen
 data class SkillDetail(
     val id: Int
 )
+
+@Serializable
+data class TimerScreen(val skillId: String,val name: String)
